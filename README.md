@@ -1,5 +1,7 @@
 # dsh-compound-memory
 
+[![npm version](https://img.shields.io/npm/v/dsh-compound-memory.svg)](https://www.npmjs.com/package/dsh-compound-memory)
+
 English | [中文](#中文)
 
 DeepSeek Harness bundle that launches the existing [compound-memory](https://pypi.org/project/compound-memory/) MCP server (`uvx --from compound-memory compound-memory-server`). It does not reimplement memory, it does not add a sixth MCP tool, and the server still has no LLM ([ADR-0001](https://github.com/chinwe/compound-memory)). This wrapper adds none. There are no install, lifecycle, or `postinstall` scripts.
