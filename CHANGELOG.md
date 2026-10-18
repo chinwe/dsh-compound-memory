@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.2 - 2026-10-18
+
+Host-side usage reminder, same job as the Claude Code SessionStart hook in chinwe/compound-memory#92. Still no server LLM (ADR-0001), no sixth MCP tool, and no install, lifecycle, or `postinstall` scripts.
+
+- `index.js` is a Cordis plugin (`compound-memory-rules`). On `agent/pre-step` it appends one short English reminder on the first eligible `enter` of a live agent, then not again. A session log that already has the reminder is left alone.
+- The message source kind is `plugin:dsh-compound-memory`. Session format v4 rejects the retired `kind: 'plugin'` wrapper and fails the turn.
+- `cordis.patch.yml` still inserts `mcp-compound-memory` (`@deepseek-ai/dsh-mcp-client`, stdio, `uvx --from compound-memory compound-memory-server`). It also inserts `compound-memory-rules` (`dsh-compound-memory`).
+- Disable only the reminder with a later patch row `- id: compound-memory-rules` / `disabled: true`. Copying the skill onto a skill root is still optional.
+- No `@deepseek-ai/*` dependency. The plugin uses the `ctx` Cordis passes in and does not import the MCP client.
+
 ## 0.1.1 - 2026-10-18
 
 README sync only.

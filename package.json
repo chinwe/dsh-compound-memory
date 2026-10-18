@@ -1,9 +1,14 @@
 {
   "name": "dsh-compound-memory",
-  "version": "0.1.1",
-  "description": "DeepSeek Harness bundle that launches the compound-memory stdio MCP server.",
+  "version": "0.1.2",
+  "description": "DeepSeek Harness bundle that launches the compound-memory stdio MCP server and injects a short once-per-session usage reminder.",
   "license": "MIT",
   "author": "chinwe",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  },
   "keywords": [
     "dsh-plugin",
     "deepseek-harness",
@@ -11,12 +16,16 @@
     "memory"
   ],
   "files": [
+    "index.js",
     "cordis.patch.yml",
     "LICENSE",
     "README.md",
     "CHANGELOG.md",
     "skills"
   ],
+  "scripts": {
+    "test": "node --test"
+  },
   "engines": {
     "dsh": ">=0.2.0-rc.1 <0.3.0-0"
   },
