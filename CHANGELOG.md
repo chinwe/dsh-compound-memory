@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.3 - 2026-10-18
+
+Aligns with compound-memory 0.5.9 on PyPI (`dream --propose`, same-host success cap, health-snapshot/trend). The bundle still launches unpinned `compound-memory` via `uvx --from compound-memory compound-memory-server`. No new MCP tool, no install, lifecycle, or `postinstall` scripts, and no server LLM (ADR-0001).
+
+- `index.js` and `cordis.patch.yml` are unchanged. The MCP row is still stdio `uvx` with `--from` `compound-memory`, not pinned to `==0.5.9`.
+- README install lines now say package version 0.1.3.
+
 ## 0.1.2 - 2026-10-18
 
 Host-side usage reminder, same job as the Claude Code SessionStart hook in chinwe/compound-memory#92. Still no server LLM (ADR-0001), no sixth MCP tool, and no install, lifecycle, or `postinstall` scripts.
