@@ -1,0 +1,24 @@
+# Config-only bundle. Insert the in-box MCP client and launch the PyPI
+# server over stdio. This package has no plugin module and adds no MCP tool.
+# A later layer replaces this row's whole config by id; it does not deep-merge.
+# 配置层 bundle：插入宿主自带的 MCP client，stdio 拉起 PyPI 上的
+# compound-memory-server。本包没有自己的插件模块，也不新增 MCP tool。
+# 后层（profile / 家目录的 cordis.patch.yml）按 id 整行替换 config，不是深合并。
+- insert:
+    - id: mcp-compound-memory
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: compound-memory
+        transport: stdio
+        command: uvx
+        args:
+          - '--from'
+          - compound-memory
+          - compound-memory-server
+        # Values are strings. A set host env wins; blank or unset falls back.
+        # compound-memory expands a leading $HOME; the value is not a shell line.
+        # 启动 dsh 的进程里已设置的变量优先；未设置或空白时用默认值。
+        env:
+          COMPOUND_MEMORY_ROOT: !!js "process.env.COMPOUND_MEMORY_ROOT || '$HOME/.agents/memory'"
+          COMPOUND_MEMORY_AGENT_ID: !!js "process.env.COMPOUND_MEMORY_AGENT_ID || 'agent-dsh'"
+        failOnStartupError: true
