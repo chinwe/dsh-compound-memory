@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1 - 2026-10-18
+
+README sync only.
+
 ## 0.1.0 - 2026-10-18
 
 Config-only DeepSeek Harness bundle published to npm as `dsh-compound-memory@0.1.0`. No install, lifecycle, or `postinstall` scripts. No extra MCP tool.
