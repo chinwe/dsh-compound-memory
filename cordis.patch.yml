@@ -1,9 +1,13 @@
-# Config-only bundle. Insert the in-box MCP client and launch the PyPI
-# server over stdio. This package has no plugin module and adds no MCP tool.
-# A later layer replaces this row's whole config by id; it does not deep-merge.
-# 配置层 bundle：插入宿主自带的 MCP client，stdio 拉起 PyPI 上的
-# compound-memory-server。本包没有自己的插件模块，也不新增 MCP tool。
-# 后层（profile / 家目录的 cordis.patch.yml）按 id 整行替换 config，不是深合并。
+# Bundle layer. Insert the in-box MCP client and this package's usage-rule
+# plugin. The MCP row still launches the PyPI server over stdio. This package
+# adds no MCP tool and no server LLM (ADR-0001).
+# A later layer replaces one row's whole config by id; it does not deep-merge.
+# Disable only the reminder with `- id: compound-memory-rules` / `disabled: true`.
+# 配置层 bundle：插入宿主自带的 MCP client，以及本包的使用规则插件。
+# MCP 行仍用 stdio 拉起 PyPI 上的 compound-memory-server。本包不新增 MCP tool，
+# server 与本插件都不调用 LLM（ADR-0001）。
+# 后层按 id 整行替换 config，不是深合并。只关提醒：`- id: compound-memory-rules`
+# 加 `disabled: true`。
 - insert:
     - id: mcp-compound-memory
       name: '@deepseek-ai/dsh-mcp-client'
@@ -22,3 +26,7 @@
           COMPOUND_MEMORY_ROOT: !!js "process.env.COMPOUND_MEMORY_ROOT || '$HOME/.agents/memory'"
           COMPOUND_MEMORY_AGENT_ID: !!js "process.env.COMPOUND_MEMORY_AGENT_ID || 'agent-dsh'"
         failOnStartupError: true
+    # Once per session. Node resolves the package name to index.js (main / exports).
+    # 每会话一次。包名解析到 index.js（main / exports）。
+    - id: compound-memory-rules
+      name: dsh-compound-memory
