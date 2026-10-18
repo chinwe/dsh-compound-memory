@@ -17,7 +17,7 @@ description: 本机跨 Agent 共享记忆库 compound-memory 的使用规范：�
 | `memory_link` | `mcp__compound-memory__memory_link` |
 | `memory_feedback` | `mcp__compound-memory__memory_feedback` |
 
-下文用 MCP 原名指这 5 个工具。本包不新增第 6 个工具，server 内无 LLM（ADR-0001），这个 wrapper 也不加。`memory_search` 的返回体含 `hits` 数组。DeepSeek Harness 的接入见本包 README。其他宿主的接入配置见 [compound-memory](https://github.com/chinwe/compound-memory) 仓库的 `docs/agent-integration.md`；英文精简版（uvx、必配 agent id、检索→反馈→写入）见同仓库 `docs/agent-integration.en.md`。宿主 env **必须**设稳定的 `COMPOUND_MEMORY_AGENT_ID`（与下面的 `source` 相同）。未设置或空白是共享 `_shared` 的硬失败：`stats` 与 `doctor` 退出码 1，诊断仍打印；MCP 工具调用不因此中断，server 启动日志会标明。
+下文用 MCP 原名指这 5 个工具。本包不新增第 6 个工具，server 内无 LLM（ADR-0001），这个 wrapper 也不加。`memory_search` 的返回体含 `hits` 数组。DeepSeek Harness 的接入见本包 README。其他宿主的接入配置见 [compound-memory](https://github.com/chinwe/compound-memory) 仓库的 `docs/agent-integration.md`；英文精简版（uvx、必配 agent id、检索→反馈→写入）见同仓库 `docs/agent-integration.en.md`。`COMPOUND_MEMORY_AGENT_ID` 未设置或空白时，本 bundle 默认 `agent-dsh`（与下面的 `source` 相同），宿主可以覆盖。绕过该默认、直接跑 CLI 且变量仍未设置或空白时，共享 `_shared` 是硬失败：`stats` 与 `doctor` 退出码 1，诊断仍打印；MCP 工具调用不因此中断，server 启动日志会标明。
 
 ## 三个必做动作（复利闭环）
 
