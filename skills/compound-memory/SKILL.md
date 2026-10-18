@@ -5,7 +5,7 @@ description: 本机跨 Agent 共享记忆库 compound-memory 的使用规范：�
 
 # compound-memory 使用规范
 
-本文件随 DSH bundle `dsh-compound-memory` 分发，路径 `skills/compound-memory/SKILL.md`。安装与 MCP 注册见同包 [`README.md`](../../README.md)。本宿主默认 `COMPOUND_MEMORY_AGENT_ID` 与下面的 `source` 都是 `agent-dsh`；启动 dsh 的环境已经设置该变量时，以环境为准。DSH 的 skill 扫描只看根目录的直接子项（`<根>/<name>/SKILL.md`），不扫描 npm 包里的 `skills/`。本包没有安装脚本，安装时不会复制本文件。要让 skill 工具加载它，把本目录复制或软链到 `~/.dsh/skills/compound-memory`（或项目 `.dsh/skills/compound-memory`、`~/.agents/skills/compound-memory`、项目 `.agents/skills/compound-memory`）。
+本文件随 DSH bundle `dsh-compound-memory` 分发，路径 `skills/compound-memory/SKILL.md`。安装与 MCP 注册见同包 [`README.md`](../../README.md)。本宿主默认 `COMPOUND_MEMORY_AGENT_ID` 与下面的 `source` 都是 `agent-dsh`；启动 dsh 的环境已经设置该变量时，以环境为准。DSH 只扫描 skill 根的直接子目录（`<根>/<name>/SKILL.md`），不读 npm 包里的 `skills/`，也没有安装脚本会复制本文件。要加载它，把本目录复制或软链成 `~/.dsh/skills/compound-memory`（项目 `.dsh/skills/compound-memory`、`~/.agents/skills/compound-memory`、项目 `.agents/skills/compound-memory` 同样可以）。
 
 本机跨 Agent 共享记忆库：MCP 服务 `compound-memory`（5 个工具是唯一读写边界），存储 `~/.agents/memory`，CLI 做运维与蒸馏。DeepSeek Harness 通过 `@deepseek-ai/dsh-mcp-client` 暴露它们，公开名是：
 
