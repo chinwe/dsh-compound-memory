@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import test from 'node:test'
+import { fileURLToPath } from 'node:url'
 
 import { RULES, SOURCE_KIND, apply, name } from '../index.js'
 
@@ -216,12 +219,14 @@ test('missing messages still produce one reminder', async () => {
 
 test('package manifest stays free of DeepSeek runtime dependencies', () => {
   const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
-  assert.equal(manifest.version, '0.1.3')
+  assert.equal(manifest.version, '0.1.4')
   assert.equal(manifest.type, 'module')
   assert.equal(manifest.main, './index.js')
   assert.equal(manifest.exports['.'], './index.js')
+  assert.equal(manifest.exports['./package.json'], './package.json')
   assert.ok(manifest.files.includes('index.js'))
   assert.ok(manifest.files.includes('cordis.patch.yml'))
+  assert.ok(manifest.files.includes('skills'))
   assert.equal(manifest.dependencies, undefined)
   assert.equal(manifest.peerDependencies, undefined)
   assert.equal(manifest.optionalDependencies, undefined)
@@ -245,5 +250,34 @@ test('the patch keeps the MCP stdio row and adds the rules plugin', () => {
   assert.match(patch, /failOnStartupError: true/)
   assert.match(patch, /id: compound-memory-rules/)
   assert.match(patch, /name: dsh-compound-memory/)
+  assert.match(patch, /id: compound-memory-skill/)
+  assert.match(patch, /name: '@deepseek-ai\/dsh-skill-filesystem'/)
+  assert.match(patch, /providerName: compound-memory/)
+  assert.match(patch, /includeDefaultRoots: false/)
+  assert.match(patch, /createRequire\(baseUrl\)\.resolve\('dsh-compound-memory\/package\.json'\)/)
+  assert.match(patch, /bundledSkillDir: !!js process\.getBuiltinModule\('node:path'\)\.join\(process\.getBuiltinModule\('node:path'\)\.dirname\(process\.getBuiltinModule\('node:module'\)\.createRequire\(baseUrl\)\.resolve\('dsh-compound-memory\/package\.json'\)\), 'skills'\)/)
   assert.doesNotMatch(patch, /postinstall/)
+  assert.doesNotMatch(patch, /bundledSkillDir:.*process\.cwd/)
+})
+
+test('bundledSkillDir resolves the installed package skills directory', () => {
+  const patch = readFileSync(new URL('../cordis.patch.yml', import.meta.url), 'utf8')
+  const expr = patch.match(/bundledSkillDir:\s*!!js\s*(.+)$/m)?.[1]
+  assert.equal(
+    expr,
+    "process.getBuiltinModule('node:path').join(process.getBuiltinModule('node:path').dirname(process.getBuiltinModule('node:module').createRequire(baseUrl).resolve('dsh-compound-memory/package.json')), 'skills')",
+  )
+  if (process.platform === 'win32') return
+
+  const root = fileURLToPath(new URL('..', import.meta.url))
+  const profile = mkdtempSync(join(tmpdir(), 'dsh-compound-memory-'))
+  try {
+    mkdirSync(join(profile, 'node_modules'))
+    symlinkSync(root, join(profile, 'node_modules', 'dsh-compound-memory'), 'dir')
+    const dir = new Function('baseUrl', `return ${expr}`)(`${profile}/`)
+    assert.equal(realpathSync(dir), realpathSync(join(root, 'skills')))
+    assert.equal(existsSync(join(dir, 'compound-memory', 'SKILL.md')), true)
+  } finally {
+    rmSync(profile, { recursive: true, force: true })
+  }
 })

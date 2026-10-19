@@ -1,6 +1,6 @@
 # Contributing
 
-This repository is a DeepSeek Harness bundle. `cordis.patch.yml` launches the compound-memory stdio server and loads `index.js` (`compound-memory-rules`) for a once-per-session usage reminder. It has no install, lifecycle, or `postinstall` scripts. Do not add any. Do not add a `prepare` script. Do not add a sixth MCP tool, and do not add a dependency on `@deepseek-ai/dsh-mcp-client` or `@deepseek-ai/cordis`.
+This repository is a DeepSeek Harness bundle. `cordis.patch.yml` launches the compound-memory stdio server, mounts `skills/` through `compound-memory-skill`, and loads `index.js` (`compound-memory-rules`) for a once-per-session usage reminder. It has no install, lifecycle, or `postinstall` scripts. Do not add any. Do not add a `prepare` script. Do not add a sixth MCP tool, and do not add a dependency on `@deepseek-ai/dsh-mcp-client`, `@deepseek-ai/dsh-skill-filesystem`, or `@deepseek-ai/cordis`.
 
 `node --test` checks the reminder listener, the 400-character budget, and that the MCP row is still the stdio `uvx` launch.
 
@@ -20,13 +20,13 @@ The plugin root is the repository root, not a subdirectory:
 dsh plugin --profile web add /absolute/path/to/dsh-compound-memory
 ```
 
-Restart `dsh`. `dsh --profile web --dump-config` should show a `# == dsh-compound-memory` layer, the `mcp-compound-memory` row, and the `compound-memory-rules` row.
+Restart `dsh`. `dsh --profile web --dump-config` should show a `# == dsh-compound-memory` layer and the `mcp-compound-memory`, `compound-memory-rules`, and `compound-memory-skill` rows. A manual skill symlink is not required.
 
 Do not run `npm publish` from a pull request.
 
 ## 贡献
 
-这是 DeepSeek Harness bundle。`cordis.patch.yml` 用 stdio 拉起 compound-memory，并加载 `index.js`（`compound-memory-rules`）做每会话一次的使用提醒。不要添加 install、lifecycle、`postinstall` 或 `prepare` 脚本，也不要新增第 6 个 MCP tool。不要依赖 `@deepseek-ai/dsh-mcp-client` 或 `@deepseek-ai/cordis`。
+这是 DeepSeek Harness bundle。`cordis.patch.yml` 用 stdio 拉起 compound-memory，用 `compound-memory-skill` 挂载 `skills/`，并加载 `index.js`（`compound-memory-rules`）做每会话一次的使用提醒。不要添加 install、lifecycle、`postinstall` 或 `prepare` 脚本，也不要新增第 6 个 MCP tool。不要依赖 `@deepseek-ai/dsh-mcp-client`、`@deepseek-ai/dsh-skill-filesystem` 或 `@deepseek-ai/cordis`。
 
 `node --test` 检查提醒监听器、400 字符上限，以及 MCP 行仍是 stdio 的 `uvx` 启动。
 
@@ -44,4 +44,4 @@ dsh plugin --profile web add github:chinwe/dsh-compound-memory
 dsh plugin --profile web add /absolute/path/to/dsh-compound-memory
 ```
 
-装完重启 `dsh`。`dsh --profile web --dump-config` 应出现 `# == dsh-compound-memory` 层、`mcp-compound-memory` 行和 `compound-memory-rules` 行。不要在 pull request 里执行 `npm publish`。
+装完重启 `dsh`。`dsh --profile web --dump-config` 应出现 `# == dsh-compound-memory` 层，以及 `mcp-compound-memory`、`compound-memory-rules`、`compound-memory-skill` 三行。不需要手动软链技能。不要在 pull request 里执行 `npm publish`。
