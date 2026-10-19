@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.4 - 2026-10-19
+
+Mount the bundled skill so `/compound-memory` is discovered after install or upgrade and a restart. No manual copy or symlink. No new MCP tool, no install, lifecycle, or `postinstall` scripts, and no server LLM (ADR-0001). The once-per-session reminder is unchanged.
+
+- `cordis.patch.yml` still inserts `mcp-compound-memory` and `compound-memory-rules`. It also inserts `compound-memory-skill` (`@deepseek-ai/dsh-skill-filesystem`, `providerName: compound-memory`, `includeDefaultRoots: false`). `bundledSkillDir` joins `skills` onto the directory of `createRequire(baseUrl).resolve('dsh-compound-memory/package.json')`.
+- `exports` now includes `./package.json`. An `exports` map that only names `"."` makes that resolve throw `ERR_PACKAGE_PATH_NOT_EXPORTED`. `exports["."]` is still `./index.js`. `skills/` stays in `files`.
+- A symlink left on a project or user skill root can stay. The registry keeps one `compound-memory` name; those roots outrank the bundled root.
+
 ## 0.1.3 - 2026-10-18
 
 Aligns with compound-memory 0.5.9 on PyPI (`dream --propose`, same-host success cap, health-snapshot/trend). The bundle still launches unpinned `compound-memory` via `uvx --from compound-memory compound-memory-server`. No new MCP tool, no install, lifecycle, or `postinstall` scripts, and no server LLM (ADR-0001).

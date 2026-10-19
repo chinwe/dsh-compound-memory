@@ -1,11 +1,13 @@
-# Bundle layer. Insert the in-box MCP client and this package's usage-rule
-# plugin. The MCP row still launches the PyPI server over stdio. This package
-# adds no MCP tool and no server LLM (ADR-0001).
+# Bundle layer. Insert the in-box MCP client, this package's usage-rule
+# plugin, and a filesystem provider for the bundled skill. The MCP row still
+# launches the PyPI server over stdio. This package adds no MCP tool and no
+# server LLM (ADR-0001). Nothing here copies the skill onto a skill root.
 # A later layer replaces one row's whole config by id; it does not deep-merge.
 # Disable only the reminder with `- id: compound-memory-rules` / `disabled: true`.
-# 配置层 bundle：插入宿主自带的 MCP client，以及本包的使用规则插件。
-# MCP 行仍用 stdio 拉起 PyPI 上的 compound-memory-server。本包不新增 MCP tool，
-# server 与本插件都不调用 LLM（ADR-0001）。
+# 配置层 bundle：插入宿主自带的 MCP client、本包的使用规则插件，以及随包技能的
+# 文件系统 provider。MCP 行仍用 stdio 拉起 PyPI 上的 compound-memory-server。
+# 本包不新增 MCP tool，server 与本插件都不调用 LLM（ADR-0001）。这里不会把
+# 技能复制到技能根。
 # 后层按 id 整行替换 config，不是深合并。只关提醒：`- id: compound-memory-rules`
 # 加 `disabled: true`。
 - insert:
@@ -30,3 +32,14 @@
     # 每会话一次。包名解析到 index.js（main / exports）。
     - id: compound-memory-rules
       name: dsh-compound-memory
+    # Bundled skill. Resolve the installed package from the profile baseUrl.
+    # A cwd-relative path would follow whatever directory started dsh.
+    # includeDefaultRoots is false so this provider does not rescan user roots.
+    # 随包技能。从 profile 的 baseUrl 解析已安装的包，不跟启动 dsh 时的 cwd。
+    # includeDefaultRoots 为 false，这个 provider 不重扫用户技能根。
+    - id: compound-memory-skill
+      name: '@deepseek-ai/dsh-skill-filesystem'
+      config:
+        providerName: compound-memory
+        includeDefaultRoots: false
+        bundledSkillDir: !!js process.getBuiltinModule('node:path').join(process.getBuiltinModule('node:path').dirname(process.getBuiltinModule('node:module').createRequire(baseUrl).resolve('dsh-compound-memory/package.json')), 'skills')
