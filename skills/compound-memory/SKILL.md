@@ -5,24 +5,12 @@ description: 本机跨 Agent 共享记忆库 compound-memory 的使用规范：�
 
 # compound-memory 使用规范
 
-本文件随 DSH bundle `dsh-compound-memory` 分发，路径 `skills/compound-memory/SKILL.md`。安装与 MCP 注册见同包 [`README.md`](../../README.md)。本宿主默认 `COMPOUND_MEMORY_AGENT_ID` 与下面的 `source` 都是 `agent-dsh`；启动 dsh 的环境已经设置该变量时，以环境为准。自 0.1.4 起，`cordis.patch.yml` 的 `compound-memory-skill` 把本包 `skills/` 挂成 `bundledSkillDir`。安装或升级后重启 `dsh`，`/compound-memory` 即可加载本文件，不必再把本目录复制或软链到 skill 根。已经放在项目或用户技能根上的副本可以留着：同名技能只保留一份，那些根的 rank 高于随包根。自 0.1.2 起，插件 `compound-memory-rules` 会在每个会话第一次 `enter` 时注入一段短英文硬规则（不读库、不调用模型）；那只是提醒，完整用法仍以本文件为准。没有 install 脚本，也不新增 MCP 工具（ADR-0001）。
-
-本机跨 Agent 共享记忆库：MCP 服务 `compound-memory`（5 个工具是唯一读写边界），存储 `~/.agents/memory`，CLI 做运维与蒸馏。DeepSeek Harness 通过 `@deepseek-ai/dsh-mcp-client` 暴露它们，公开名是：
-
-| MCP 原名 | DSH 里调用 |
-|---|---|
-| `memory_search` | `mcp__compound-memory__memory_search` |
-| `memory_get` | `mcp__compound-memory__memory_get` |
-| `memory_write` | `mcp__compound-memory__memory_write` |
-| `memory_link` | `mcp__compound-memory__memory_link` |
-| `memory_feedback` | `mcp__compound-memory__memory_feedback` |
-
-下文用 MCP 原名指这 5 个工具。本包不新增第 6 个工具，server 内无 LLM（ADR-0001），这个 wrapper 也不加。`memory_search` 的返回体含 `hits` 数组。DeepSeek Harness 的接入见本包 README。其他宿主的接入配置见 [compound-memory](https://github.com/chinwe/compound-memory) 仓库的 `docs/agent-integration.md`；英文精简版（uvx、必配 agent id、检索→反馈→写入）见同仓库 `docs/agent-integration.en.md`。`COMPOUND_MEMORY_AGENT_ID` 未设置或空白时，本 bundle 默认 `agent-dsh`（与下面的 `source` 相同），宿主可以覆盖。绕过该默认、直接跑 CLI 且变量仍未设置或空白时，共享 `_shared` 是硬失败：`stats` 与 `doctor` 退出码 1，诊断仍打印；MCP 工具调用不因此中断，server 启动日志会标明。
+本机跨 Agent 共享记忆库：MCP 服务 `compound-memory`（5 个工具是唯一读写边界），存储 `~/.agents/memory`，CLI 做运维与蒸馏。接入配置（各宿主 MCP 注册）见仓库 `docs/agent-integration.md`；英文精简版（uvx、必配 agent id、检索→反馈→写入）见 `docs/agent-integration.en.md`。宿主 env **必须**设稳定的 `COMPOUND_MEMORY_AGENT_ID`（与下面的 `source` 相同）。未设置或空白是共享 `_shared` 的硬失败：`stats` 与 `doctor` 退出码 1，诊断仍打印；MCP 工具调用不因此中断，server 启动日志会标明。
 
 ## 三个必做动作（复利闭环）
 
 1. **任务开始先检索**：接到非琐碎任务，先 `memory_search` 按任务关键词查相关记忆（用户偏好、项目背景、环境坑）。缺省 `top_k=5`，要看覆盖面就显式放大。默认检索即双通道：`_shared` + 本宿主私有 ns（身份已知时自动并入，私有条目无需单独补搜）；显式传 `ns` 则只搜该 ns（精确语义）。**project 作用域（ADR 0010）**：检索缺省 fail-closed——不传 `project` 只见全局（未标注）记忆；宿主使用规则声明了工作区项目时，检索与写入都带上该 `project=<slug>`，即可见 全局 ∪ 该项目。
-2. **采纳即反馈**：命中且**实际采纳**后必须调 `memory_feedback`（`agent` 填本宿主 source id）——复利闭环的核心动作，漏掉它记忆库就不增值。归档记忆被 feedback 自动复活。反馈带 outcome（缺省 `success`）：记忆**用对了**保持缺省；**误导了你**报 `failure`（置信度 −0.2，可降到地板 0.05，重复累计）；**内容有争议**报 `contradiction`（数值冻结、登记冲突队列待裁决）；**已被取代**报 `obsolete`（立即归档）；说不清就报 `unknown`（uses 与 last_used 仍推进，置信度不动）。每个 outcome 都推进 uses 与 last_used。置信度是证据正确性、可升可降：success 与跨宿主首验升它，failure 降它。
+2. **采纳即反馈**：命中且**实际采纳**后必须调 `memory_feedback`（`agent` 填本宿主 source id）——复利闭环的核心动作，漏掉它记忆库就不增值。归档记忆被 feedback 自动复活。反馈带 outcome（缺省 `success`）：记忆**用对了**保持缺省；**误导了你**报 `failure`（置信度 −0.2，可降到地板 0.05，重复累计）；**内容有争议**报 `contradiction`（数值冻结、登记冲突队列待裁决）；**已被取代**报 `obsolete`（立即归档）；说不清就报 `unknown`（uses 与 last_used 仍推进，置信度不动）。每个 outcome 都推进 uses 与 last_used。置信度是证据正确性、可升可降：success 与跨宿主首验升它，failure 降它；同宿主的 success 增益累计封顶 0.3——单宿主天花板 0.8，以上只能靠跨宿主验证（ADR 0011；到顶后 feedback 照记账，数值不再升）。
 3. **任务结束沉淀**：会话确认的稳定事实（用户偏好、项目约定、环境限制、踩坑结论）用 `memory_write` 写入，判据见下表；一次性、会话内临时信息只存在于会话。
 
 新记忆与已有记忆有因果/派生关系时用 `memory_link` 双向连上，检索时自动带出邻居（两条记忆必须同 ns，跨 ns 链被拒绝；私有 `agent-*` ns 的两条记忆须带 `agent`＝本宿主 source id，仅属主可连）。邻居是线索不是结论：采纳以 hit 本身为准。
@@ -33,7 +21,7 @@ description: 本机跨 Agent 共享记忆库 compound-memory 的使用规范：�
 |---|---|
 | `type` | `fact` 客观事实（配置、账号、环境参数）；`insight` 经验教训；`skill` 可复用操作方法；`episode` 事件经历；`decision` 已做的选择（选型、方案拍板，长寿如 fact，被新决策取代走冲突裁决） |
 | `key` | fact/insight/decision 用稳定英文短横线标识（`user-tts`、`proj-xxx`），格式 `^[a-z0-9]+(-[a-z0-9]+)*$`，`write` 落库前校验（不合规 ValueError）；**禁止日期前缀**——id 已含日期，日期化 key 天然一次性，等于放弃同 key 更新通道（2026-10-05 单日多会话沉淀出成批日期 key 的教训）；更新既有事实复用同 key，新版本与旧版内容不同时返回 `conflict: true` 并入冲突队列 |
-| `source` | 宿主标识：`agent-workbuddy` / `agent-zcode` / `agent-claude` / `agent-cursor` / `agent-dsh`。必须与宿主 env `COMPOUND_MEMORY_AGENT_ID` 一致 |
+| `source` | 宿主标识：`agent-workbuddy` / `agent-zcode` / `agent-claude` / `agent-cursor` / `agent-deepseek`。必须与宿主 env `COMPOUND_MEMORY_AGENT_ID` 一致 |
 | `content` | 上限 262144 字符；超限 `ValueError`（`content exceeds`），不落盘。长材料改成短事实或只存指针 |
 | `ns` | 默认 `_shared`；`agent-*` 是私有区，写/读/反馈都只认属主——读私有 ns 须带 `reader`（自己的 agent id，缺省即拒绝），越权抛 `PermissionError`；ns 只允许 `[A-Za-z0-9_-]`（路径组件安全，含 `../`、`/`、`*` 等一律 ValueError——ns 会被直接拼进存储路径）。`memory_search` 不传 `ns` 时自动并搜自有私有区（双通道，见必做动作①） |
 | `valid_from` / `valid_until` | 可选 ISO 日期（YYYY-MM-DD）标注事实有效期；`valid_until` 已过的事实自动退出检索结果（`memory_get` 仍可读）。事实会过时的场景（负责人变更、配置轮换）写新版时带上预期失效日，过期后检索不再被旧值污染 |
@@ -67,13 +55,14 @@ description: 本机跨 Agent 共享记忆库 compound-memory 的使用规范：�
 | `explain <id> [--reader <agent id>]` | 按 id 看单条记忆的置信度构成（证据计数 success/failure/contradiction、last_verified、最近反馈明细、跨宿主验证明细 validated_by、派生标记、当前 conf）——排查「这条 conf 为什么这么高/低」「这条是不是蒸馏产物」时用；只读不产生提交，私有 ns 加 `--reader` |
 | `rebuild-index` | 手工编辑过记忆文件**内容**后（活性检测只覆盖新增/删除文件） |
 | `review-queue` / `review-resolve` | 处理同 key 冲突队列与 contradiction 争议（人工裁决入口）：`review-resolve <废置id>` 清行并自动归档废置方（对侧保留活动区）；contradiction 争议行裁决二选一——维持原记忆有效用 `review-resolve <争议id> --uphold`（解冻并按 failure −0.2 折算），确错则缺省路径归档；`--all` 只清空队列不归档（争议行解冻但不折算）。私有 `agent-*` ns 的行仅属主可清（加 `--reader`）——`--all` 会静默保留别人的私有行，显式点名则报错；`review-queue` 展示仍全量 |
-| `decay` | 衰减归档，长期未用且少用才动（定时任务跑） |
-| `dream [--ns <ns>] [--reader <id>]` | 离线只读编排（ADR-0001，无 LLM）：对一个 ns 出报告。`distill` 段复用 distill-plan（merge_with / possible_dup_of / promotion_candidate / key_duplicates，`suggested_action` 只有 merge / promote / review，以及只读的 `negative_salience` / `contradiction_pairs`）；`decay_signals` 只计数（valid_until 已过、归档区规模、低活性）；`stats_before` / `stats_after` 空跑相等。不写盘、不归档、不 distill-apply、不 forget。负向段不放宽写盘。定时准备跑的就是它，没有 `--apply`。私有 ns 加 `--reader` |
+| `decay` | 衰减归档，长期未用且少用才动。单独跑，或由 `maintain` 在 `--with-decay` / `RUN_DECAY=1` 时调用；默认的每日维护不跑它 |
+| `dream [--ns <ns>] [--reader <id>] [--propose]` | 离线只读编排（ADR-0001，无 LLM）：对一个 ns 出报告。`distill` 段复用 distill-plan（merge_with / possible_dup_of / promotion_candidate / key_duplicates，`suggested_action` 只有 merge / promote / review，以及只读的 `negative_salience` / `contradiction_pairs`）；`decay_signals` 只计数（valid_until 已过、归档区规模、低活性）；`stats_before` / `stats_after` 空跑相等。不写盘、不归档、不 distill-apply、不 forget。负向段不放宽写盘。定时准备跑的就是它，没有 `--apply`。私有 ns 加 `--reader`。显式 `--propose`（默认关，ADR-0011）把过硬门槛的同 key 合并候选写到 `<root>/distill/dream-proposals.json`（形状即 dream-apply 的列表；无合格簇写 `[]`）。系统提议，人工 `dream-apply` |
 | `dream-apply --proposals <file> --source <agent> [--dry-run] [--ns <ns>] [--reader <id>]` | 显式半自动落库（#72，无 LLM）。`--proposals` 是 JSON 列表，每项必须自带 `content`、`type`、`source_ids`（可选 `key` / `confidence`；`promote: true` 才允许晋升）。只编排既有 `distill-apply`：同 key 强信号 `merge_with` / `key_duplicates`，以及调用方点名的 `promotion_candidate`。`suggested_action: review`（`possible_dup_of`）只报告不落库。未过门槛的项列入 `skipped` 并给原因。`--dry-run` 只打印 `planned`、零写盘。不 forget，没有 `--include-forget`，也没有 git revert 子命令（回看用 `git-log`）。定时任务禁止调用。私有 ns 加 `--reader`，且 `--source` 必须是属主 |
 | `revive <id>` | 复活归档记忆（私有 ns 记忆加 `--reader`） |
 | `forget <id> --agent <agent id> [--reason <动机短语>]` | 终态遗忘（ADR-0009）：文件物理移出（活动/归档区皆可）+ 单条 forget 提交留痕，内容仅存 git 历史。不可复活：对被遗忘记忆 feedback/revive 返回 `found: false`，恢复 = 带外 git 运维（checkout/revert）。私有 `agent-*` ns 仅属主可遗忘（`--agent` 与 feedback 同规）；幂等（不存在/已遗忘返回 `found: false`）。`--reason` 是动机短语（单行、限 80 字符），不贴记忆正文。隐私边界：forget 解决「活动库不再携带」，不解决「历史不再包含」——git 历史清理是另行决策的破坏性运维 |
 | `git-log` | 审计轨迹（每次写入自动 commit）；消费端降噪：`--grep PATTERN`（可多次，OR）只留消息匹配的提交、`--exclude PATTERN`（可多次）剔除匹配的提交，PATTERN 为正则作用于消息段（剥 hash），如 `git-log --exclude feedback` |
-| `extract <transcript\|dir>` | 会话抽取清单（P0）：确定性扫描，候选写 `extract/last-candidates.json`（一次性快照，下次扫描覆盖）。transcript 按内容自动判别四种形态：WorkBuddy session log、ZCode 会话库（`~/.zcode/cli/db/db.sqlite`，全量历史，直接指库文件）、Claude Code session log、DeepSeek Harness session（zstd 压缩，需系统 zstd CLI）。jsonl/zstd 传目录则批量扫（WorkBuddy 与 Claude 同为 `<项目>/<会话>.jsonl`，dsh 为 `<项目>/<会话>/session*.jsonl.zstd`）。`~/.workbuddy/traces/` 与 ZCode rollout/model-io 快照不接入——都只剩部分轮次，接进来是假阴性（理由见下） |
+| `health-snapshot` / `health-trend --days N` | 健康时序（#100，CLI-only）：`health-snapshot` 追加一行（date + stats 全量原样）到库根 `health/health.jsonl`——显式运维动词（人工或 launchd/cron 定时；`maintain` 在可选 decay 之后调用它），单写者不持写锁，同日多行、去重归读面；指标单一来源是 stats，不另算；`health/` 不入 git（与 index/ 同型工件）。`health-trend` 读最近 N 天按 date 取每日最后一条，现算总量 / 归档率 / 平均置信度 / review 队列长度 / 蒸馏产出 / 跨宿主覆盖率 / recent_feedback_7d + 首尾 delta；纯文件读不开 store，空态退出码 0。两命令退出码恒 0（身份状态在行内 attestation，定时任务不误报），不是 MCP 工具 |
+| `maintain [--with-decay] [--ns <ns>] [--reader <id>]` | 一条日常维护（CLI-only）：顺序固定为只读 `dream`（写入 `<root>/distill/last-plan.json`，不带 `--propose`）→ 可选 `decay` → `health-snapshot`。默认不 decay；`--with-decay` 或 `RUN_DECAY=1`（`DECAY=1` 同义）才衰减，且快照反映衰减后的库。任一步失败非 0 并点名该步。不调用 `dream-apply` / `distill-apply`。`distill-prepare.sh` 仍只跑 dream。不是 MCP 工具 |
 
 ### 抽取清单确认（P0：扫描只发现候选，写库仍走协议）
 
@@ -83,7 +72,7 @@ description: 本机跨 Agent 共享记忆库 compound-memory 的使用规范：�
 
 ### 蒸馏工作流（判断段归调用方 Agent）
 
-1. `dream`：只读报告写到 `<root>/distill/last-plan.json`（launchd 每天 09:00 自动跑，只跑这条只读命令）。候选清单在 `distill` 段（与直接跑 `distill-plan` 同字段）：主候选标注 merge_with / possible_dup_of / promotion_candidate，并带 `suggested_action`（只有 **merge** / **promote** / **review**）。`suggested_actions` 把簇列成清单，成员是 `source_ids`。同 key 多版本（`key_duplicates`，含 uses=0 的废置旧版）自动标 merge；高活性 episode 标 promote；`possible_dup_of`（含跨 key 弱相似）标 review。同段还有只读的 `negative_salience` 与 `contradiction_pairs`（教训负向与矛盾对，不产生新动作，也不放宽 dream-apply）。没有 synthesize，也不写 `supersedes:`——跨 key 多源若你判断该综合，动作名仍是 merge，簇就是你给出的 `source_ids`，溯源靠产物 links。`decay_signals` 只是计数线索，归档仍走 `decay` / `distill-apply` / `review-resolve`，forget 仍是显式 CLI。扫私有 ns 加 `--reader`；`distill-apply` 的源与产物必须同 ns。只要候选清单时可直接 `distill-plan`。
+1. `dream`：只读报告写到 `<root>/distill/last-plan.json`。只准备蒸馏时定时任务只跑这条只读命令（`distill-prepare.sh`）。一条 cron 用 `maintain`：先写同一份报告（不带 `--propose`），decay 默认关（`--with-decay` 或 `RUN_DECAY=1` / `DECAY=1` 才跑），然后 `health-snapshot`。`dream-apply` / `distill-apply` 不进定时任务（ADR-0001 / #72 / #97）。候选清单在 `distill` 段（与直接跑 `distill-plan` 同字段）：主候选标注 merge_with / possible_dup_of / promotion_candidate，并带 `suggested_action`（只有 **merge** / **promote** / **review**）。`suggested_actions` 把簇列成清单，成员是 `source_ids`。同 key 多版本（`key_duplicates`，含 uses=0 的废置旧版）自动标 merge；高活性 episode 标 promote；`possible_dup_of`（含跨 key 弱相似）标 review。同段还有只读的 `negative_salience` 与 `contradiction_pairs`（教训负向与矛盾对，不产生新动作，也不放宽 dream-apply）。没有 synthesize，也不写 `supersedes:`——跨 key 多源若你判断该综合，动作名仍是 merge，簇就是你给出的 `source_ids`，溯源靠产物 links。`decay_signals` 只是计数线索，归档仍走 `decay` / `distill-apply` / `review-resolve`，forget 仍是显式 CLI。扫私有 ns 加 `--reader`；`distill-apply` 的源与产物必须同 ns。只要候选清单时可直接 `distill-plan`。
 2. Agent 读报告的 `suggested_action` 做取舍、自己写产物正文。判断段不在 server 内（无 LLM，不改写磁盘上的记忆正文）。没有产物正文时不要落库。
 3. 按动作落库，仍走既有写路径。**merge**：用簇里的 `source_ids` 写一条综合正文，`distill-apply "<产物>" <type> <source> --sources <id1>,<id2>`（同 key 组也可放进 dream-apply，正文仍要你给）。**promote**：写成更高 type 的新记忆，`dream-apply` 的该项必须带 `promote: true`，或直接 `distill-apply`；类型不原地改。**review**：留在报告里，不要放进 dream-apply。若判断后仍要综合，改按 merge 调用 `distill-apply`。要按门槛收一批：先 `dream-apply --proposals <file> --source <本宿主> --dry-run` 看 `planned` / `skipped`，确认后再去掉 `--dry-run`。产物 links 溯源到源、源归档可复活。任意会话发现清单有新候选时按需处理即可。
 
@@ -105,4 +94,4 @@ description: 本机跨 Agent 共享记忆库 compound-memory 的使用规范：�
 | 项目记忆检索不到 | 先核对调用方 `project` 参数（或 CLI `COMPOUND_MEMORY_PROJECT`）与记忆标注一致；检索缺省 fail-closed 只见全局记忆（ADR 0010），声明对应项目才见 全局 ∪ 该项目；按 id 的 `memory_get` 不受 project 限制，可先取回核对 frontmatter |
 | 报 `project must match` | project slug 格式不合规（禁大写/下划线/空格/连续横线）：与 key 同格式，改用小写字母数字段以短横线连接 |
 
-架构与复利机制见 [compound-memory](https://github.com/chinwe/compound-memory) 仓库的 `README.md`，术语见同仓库 `CONTEXT.md`。
+架构与复利机制见仓库 `README.md`，术语见 `CONTEXT.md`。

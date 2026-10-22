@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.5 - 2026-10-22
+
+Aligns with compound-memory 0.5.10 on PyPI (CLI `maintain`: dream → optional decay → health-snapshot). The bundled skill is refreshed from upstream tag `v0.5.10` (`skills/compound-memory/SKILL.md`). The bundle still launches unpinned `compound-memory` via `uvx --from compound-memory compound-memory-server`. No new MCP tool, no install, lifecycle, or `postinstall` scripts, and no server LLM (ADR-0001).
+
+- `index.js` and `cordis.patch.yml` are unchanged. The MCP row is still stdio `uvx` with `--from` `compound-memory`, not pinned to `==0.5.10`.
+- README install lines now say package version 0.1.5.
+
 ## 0.1.4 - 2026-10-19
 
 Mount the bundled skill so `/compound-memory` is discovered after install or upgrade and a restart. No manual copy or symlink. No new MCP tool, no install, lifecycle, or `postinstall` scripts, and no server LLM (ADR-0001). The once-per-session reminder is unchanged.
