@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.7 - 2026-10-25
+
+CI only. npm Trusted Publishing via GitHub Actions OIDC when a GitHub Release is published (`.github/workflows/publish.yml`, `release: types: [published]`). No `NPM_TOKEN`. No functional plugin change. `publish.yml` is unchanged. `index.js`, `cordis.patch.yml`, and the bundled skill are unchanged. No new MCP tool, no install, lifecycle, or `postinstall` scripts, and no server LLM (ADR-0001).
+
+- README install lines now say package version 0.1.7.
+- The package manifest test expects version 0.1.7.
+
 ## 0.1.6 - 2026-10-25
 
 Aligns with compound-memory 0.5.11 on PyPI (write-lock, confidence, and full uuid id fixes on the Python side). Main has no functional commits since 0.1.5, so this is a version alignment bump for marketplace refresh. The bundled skill is unchanged. The bundle still launches unpinned `compound-memory` via `uvx --from compound-memory compound-memory-server`. No new MCP tool, no install, lifecycle, or `postinstall` scripts, and no server LLM (ADR-0001).
