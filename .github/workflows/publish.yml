@@ -37,4 +37,12 @@ jobs:
       # There is no build step.
 
       - name: Publish to npm
-        run: npm publish --access public
+        run: |
+          # setup-node writes //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}.
+          # With no npm token that empty value is sent instead of the OIDC
+          # trusted-publisher exchange, and the registry answers 404.
+          if [ -n "${NPM_CONFIG_USERCONFIG:-}" ] && [ -f "$NPM_CONFIG_USERCONFIG" ]; then
+            grep -v '_authToken' "$NPM_CONFIG_USERCONFIG" > "$NPM_CONFIG_USERCONFIG.noidc"
+            mv "$NPM_CONFIG_USERCONFIG.noidc" "$NPM_CONFIG_USERCONFIG"
+          fi
+          npm publish --access public --loglevel verbose
