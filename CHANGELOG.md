@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.6 - 2026-10-25
+
+Aligns with compound-memory 0.5.11 on PyPI (write-lock, confidence, and full uuid id fixes on the Python side). Main has no functional commits since 0.1.5, so this is a version alignment bump for marketplace refresh. The bundled skill is unchanged. The bundle still launches unpinned `compound-memory` via `uvx --from compound-memory compound-memory-server`. No new MCP tool, no install, lifecycle, or `postinstall` scripts, and no server LLM (ADR-0001).
+
+- `index.js` and `cordis.patch.yml` are unchanged. The MCP row is still stdio `uvx` with `--from` `compound-memory`, not pinned to `==0.5.11`.
+- README install lines now say package version 0.1.6.
+
 ## 0.1.5 - 2026-10-22
 
 Aligns with compound-memory 0.5.10 on PyPI (CLI `maintain`: dream → optional decay → health-snapshot). The bundled skill is refreshed from upstream tag `v0.5.10` (`skills/compound-memory/SKILL.md`). The bundle still launches unpinned `compound-memory` via `uvx --from compound-memory compound-memory-server`. No new MCP tool, no install, lifecycle, or `postinstall` scripts, and no server LLM (ADR-0001).

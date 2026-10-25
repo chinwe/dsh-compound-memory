@@ -219,7 +219,7 @@ test('missing messages still produce one reminder', async () => {
 
 test('package manifest stays free of DeepSeek runtime dependencies', () => {
   const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
-  assert.equal(manifest.version, '0.1.5')
+  assert.equal(manifest.version, '0.1.6')
   assert.equal(manifest.type, 'module')
   assert.equal(manifest.main, './index.js')
   assert.equal(manifest.exports['.'], './index.js')
