@@ -22,7 +22,7 @@ DeepSeek Harness bundle that launches the existing [compound-memory](https://pyp
 
 Requires the [`dsh`](https://deepseek-harness.github.io/deepseek-harness/en/guide/) CLI and `uv` / `uvx` on the `PATH` of the process that starts `dsh`. The first `uvx` run needs network access to fetch `compound-memory` from PyPI. `uv` supplies the tool's Python; a system Python is not required.
 
-Package version 0.1.7, published on npm as [`dsh-compound-memory`](https://www.npmjs.com/package/dsh-compound-memory):
+Package version 0.1.8, published on npm as [`dsh-compound-memory`](https://www.npmjs.com/package/dsh-compound-memory):
 
 ```bash
 dsh plugin --profile web add dsh-compound-memory
@@ -109,7 +109,7 @@ DSH 里的工具名是 `mcp__compound-memory__memory_search`、`memory_get`、`m
 
 需要 [`dsh`](https://deepseek-harness.github.io/deepseek-harness/en/guide/) CLI，以及启动 `dsh` 的那个进程的 `PATH` 上有 `uv` / `uvx`。第一次 `uvx` 要从 PyPI 拉 `compound-memory`，需要网络。Python 由 `uv` 自己准备，不要求系统里先装 Python。
 
-包版本 0.1.7，npm 包名为 [`dsh-compound-memory`](https://www.npmjs.com/package/dsh-compound-memory)：
+包版本 0.1.8，npm 包名为 [`dsh-compound-memory`](https://www.npmjs.com/package/dsh-compound-memory)：
 
 ```bash
 dsh plugin --profile web add dsh-compound-memory
