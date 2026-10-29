@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.8 - 2026-10-30
+
+Aligns with compound-memory 0.5.12 on PyPI and the GitHub Release (skill promote, skill-export, docs, and the TLA+ write-lock proof landed upstream). This package is a host bundle bump. The bundled skill is refreshed from upstream tag `v0.5.12` (`e79c9058`, `skills/compound-memory/SKILL.md`): `skill` keys, CLI `skill-export` / `skill-export-apply` (ADR-0014), and the confidence ceiling citation now point at ADR 0012. The bundle still launches unpinned `compound-memory` via `uvx --from compound-memory compound-memory-server`. No new MCP tool, no install, lifecycle, or `postinstall` scripts, and no server LLM (ADR-0001).
+
+- `index.js` and `cordis.patch.yml` are unchanged. The MCP row is still stdio `uvx` with `--from` `compound-memory`, not pinned to `==0.5.12`. `publish.yml` is unchanged.
+- README install lines now say package version 0.1.8.
+- The package manifest test expects version 0.1.8.
+
 ## 0.1.7 - 2026-10-25
 
 CI only. npm Trusted Publishing via GitHub Actions OIDC when a GitHub Release is published (`.github/workflows/publish.yml`, `release: types: [published]`). No `NPM_TOKEN`. No functional plugin change. `publish.yml` is unchanged. `index.js`, `cordis.patch.yml`, and the bundled skill are unchanged. No new MCP tool, no install, lifecycle, or `postinstall` scripts, and no server LLM (ADR-0001).
